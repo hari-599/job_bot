@@ -1,0 +1,20 @@
+services:
+  - type: worker
+    name: job-scanner
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    disk:
+      name: jobbot-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: OWNER_ID
+        sync: false
+      - key: POLL_MINUTES
+        value: "10"
+      - key: DB_PATH
+        value: /data/jobbot.db

@@ -1,5 +1,5 @@
 """Core engine: fetch jobs -> strict experience/location/title match -> dedupe -> return new matches."""
-import email, hashlib, html, imaplib, os, re, sqlite3, threading
+import hashlib, html, os, re, sqlite3, threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 
@@ -131,9 +131,9 @@ def iso(s):
         return None
 
 
-def mk(id_, title, company, loc, url, posted, source, desc=None, detail=None, exp=None, trusted=False):
+def mk(id_, title, company, loc, url, posted, source, desc=None, detail=None, exp=None):
     return dict(id=id_, title=title or "", company=company or "", location=loc or "", url=url,
-                posted=posted, source=source, desc=desc, detail=detail, exp=exp, trusted=trusted)
+                posted=posted, source=source, desc=desc, detail=detail, exp=exp)
 
 
 # ------------------------------------------------------------------ SOURCES
@@ -230,63 +230,8 @@ def amazon():
     return out
 
 
-def jsearch():
-    """Aggregates LinkedIn/Indeed/Glassdoor/Naukri etc. Rate-limited to save your API quota."""
-    key = os.getenv("RAPIDAPI_KEY")
-    gap = int(os.getenv("JSEARCH_EVERY_MIN", "120"))
-    last = kv_get("jsearch_ts")
-    if not key or (last and datetime.now() - datetime.fromisoformat(last) < timedelta(minutes=gap)):
-        return []
-    kv_set("jsearch_ts", datetime.now().isoformat())
-    out = []
-    for q in C.QUERIES[:3]:
-        r = requests.get("https://jsearch.p.rapidapi.com/search", timeout=30,
-                         headers={"X-RapidAPI-Key": key, "X-RapidAPI-Host": "jsearch.p.rapidapi.com"},
-                         params={"query": f"{q} in India", "country": "in", "date_posted": "today"})
-        r.raise_for_status()
-        for j in r.json().get("data") or []:
-            m = (j.get("job_required_experience") or {}).get("required_experience_in_months")
-            out.append(mk(f"js:{j['job_id']}", j["job_title"], j.get("employer_name"),
-                          ", ".join(filter(None, [j.get("job_city"), j.get("job_state"), j.get("job_country")])),
-                          j.get("job_apply_link"), iso(j.get("job_posted_at_datetime_utc") or ""),
-                          "JSearch/" + (j.get("job_publisher") or "web"),
-                          desc=j.get("job_description"), exp=(m / 12 if m is not None else None)))
-    return out
-
-
-def linkedin_alerts():
-    """Reads LinkedIn job-alert emails. In your LinkedIn alerts, set Experience level = Entry level + Associate;
-    those emails are then trusted for experience (alerts contain no job description)."""
-    user, pw = os.getenv("IMAP_USER"), os.getenv("IMAP_PASSWORD")
-    if not user or not pw:
-        return []
-    out = []
-    m = imaplib.IMAP4_SSL(os.getenv("IMAP_HOST", "imap.gmail.com"))
-    m.login(user, pw)
-    m.select("INBOX")
-    _, data = m.search(None, '(UNSEEN FROM "linkedin.com")')
-    for num in data[0].split():
-        _, md = m.fetch(num, "(RFC822)")
-        msg = email.message_from_bytes(md[0][1])
-        body = "".join(p.get_payload(decode=True).decode(errors="ignore")
-                       for p in msg.walk() if p.get_content_type() == "text/html")
-        for a in BeautifulSoup(body, "html.parser").find_all("a", href=re.compile(r"/jobs/view/")):
-            mid = re.search(r"/jobs/view/(?:[^/?]*?-)?(\d{6,})", a["href"])
-            title = a.get_text(" ", strip=True)
-            if not mid or not title:
-                continue
-            cell = a.find_parent("td")
-            parts = [p for p in (cell.get_text("|", strip=True).split("|") if cell else []) if p and p != title]
-            out.append(mk(f"li:{mid.group(1)}", title, parts[0] if parts else "",
-                          parts[1] if len(parts) > 1 else "",
-                          f"https://www.linkedin.com/jobs/view/{mid.group(1)}",
-                          datetime.now(timezone.utc), "LinkedIn alert", trusted=True))
-    m.logout()
-    return out
-
-
 def build_tasks():
-    t = [("linkedin-alerts", linkedin_alerts)]
+    t = []
     t += [(f"greenhouse:{c}", lambda c=c: gh(c)) for c in C.GREENHOUSE]
     t += [(f"lever:{c}", lambda c=c: lever(c)) for c in C.LEVER]
     t += [(f"ashby:{c}", lambda c=c: ashby(c)) for c in C.ASHBY]
@@ -294,7 +239,6 @@ def build_tasks():
     t += [(f"workday:{w[0]}", lambda w=w: workday(*w)) for w in C.WORKDAY]
     if C.AMAZON:
         t.append(("amazon", amazon))
-    t.append(("jsearch", jsearch))  # last, so direct company sources win dedupe
     return t
 
 
@@ -316,15 +260,13 @@ def quick_ok(j):
 def judge(j, strict=True):
     """-> (ok, tag). Strict = reject postings that don't state experience (unless LinkedIn-level-filtered)."""
     text, loc = j.get("desc") or "", j["location"]
-    if not (INDIA.search(loc) or (not loc and j["trusted"]) or re.search(r"\bindia\b", text, re.I)):
+    if not (INDIA.search(loc) or re.search(r"\bindia\b", text, re.I)):
         return False, "not india"
     yrs = required_years(text)
     if yrs is None:
         yrs = j.get("exp")
     if yrs is not None:
         return yrs <= MAX_MIN_YEARS, (f"{yrs:g}+ yrs" if yrs else "fresher / 0 yrs") if yrs <= MAX_MIN_YEARS else f"needs {yrs:g}y"
-    if j["trusted"]:
-        return True, "LinkedIn level filter"
     return (not strict), "not stated"
 
 

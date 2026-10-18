@@ -12,8 +12,6 @@ In the repository, open **Settings > Secrets and variables > Actions** and add:
 - `TELEGRAM_BOT_TOKEN`: your Telegram bot token.
 - `OWNER_ID`: your numeric Telegram user ID. Send `/start` to the bot once so
   it is allowed to message you.
-- Optional: `DISCORD_WEBHOOK_URL`, `RAPIDAPI_KEY`, `IMAP_USER`, and
-  `IMAP_PASSWORD`.
 
 Enable the **jobbot** workflow under **Actions** and run it once with **Run
 workflow** to test it. It will then run on its schedule.

@@ -35,10 +35,6 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           OWNER_ID: ${{ secrets.OWNER_ID }}
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-          IMAP_USER: ${{ secrets.IMAP_USER }}
-          IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
           STRICT: "1"
       - name: Save job database
         if: success()

@@ -1,5 +1,5 @@
-"""One-shot runner for GitHub Actions: check once, send Telegram (and Discord) messages, exit."""
-import html, os, re
+"""One-shot runner for GitHub Actions: check once, send Telegram messages, exit."""
+import html, os
 from datetime import datetime, timedelta
 
 import requests
@@ -8,7 +8,6 @@ import core
 
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 CHAT = os.environ.get("OWNER_ID")          # your Telegram user id (press Start on your bot once first)
-DISCORD = os.environ.get("DISCORD_WEBHOOK_URL")
 
 
 def send(text):
@@ -19,12 +18,6 @@ def send(text):
         r.raise_for_status()
         if not r.json().get("ok"):
             raise RuntimeError("Telegram rejected the message")
-    if DISCORD:
-        r = requests.post(DISCORD, json={
-            "content": re.sub(r"<[^>]+>", "", html.unescape(text))[:1900]}, timeout=20)
-        r.raise_for_status()
-
-
 def card(j):
     e = html.escape
     return (f"🆕 <b>{e(j['title'])}</b>\n🏢 {e(j['company'])}\n📍 {e(j['location'] or 'India')}\n"

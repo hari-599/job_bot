@@ -1,7 +1,6 @@
 """Telegram job bot. Run: python bot.py"""
 import asyncio, html, logging, os
 
-import requests
 from dotenv import load_dotenv
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
@@ -12,7 +11,6 @@ import core  # noqa: E402  (after load_dotenv so env vars are visible)
 logging.basicConfig(level=logging.INFO)
 OWNER = int(os.getenv("OWNER_ID", "0"))          # your Telegram user id (get it from @userinfobot)
 INTERVAL = int(os.getenv("POLL_MINUTES", "10")) * 60
-DISCORD = os.getenv("DISCORD_WEBHOOK_URL")       # optional mirror
 
 
 def allowed(u: Update):
@@ -42,12 +40,6 @@ async def broadcast(bot, jobs):
             for j in jobs:
                 await bot.send_message(cid, card(j), parse_mode="HTML", reply_markup=buttons(j["h"]),
                                        disable_web_page_preview=True)
-    if DISCORD:
-        for j in jobs:
-            await asyncio.to_thread(requests.post, DISCORD, json={
-                "content": f"🆕 **{j['title']}** @ {j['company']} | {j['location']} | {j['tag']}\n{j['url']}"})
-
-
 async def poll(ctx: ContextTypes.DEFAULT_TYPE):
     if core.kv_get("paused") == "1":
         return
@@ -61,7 +53,7 @@ async def start(u: Update, c):
         return
     core.add_chat(u.effective_chat.id)
     await u.message.reply_text(
-        "👋 Job bot is on. I check ~40 company portals + LinkedIn alerts every "
+        "👋 Job bot is on. I check ~40 company portals every "
         f"{INTERVAL // 60} min and only ping roles needing ≤{core.MAX_MIN_YEARS} yrs experience in India.\n\n"
         "/latest – last 10 matches\n/status – source health\n/stats – counts\n"
         "/strict on|off – hide/show roles that don't state experience\n/pause /resume /checknow")

@@ -1,11 +1,17 @@
 name: jobbot
+
 on:
   schedule:
-    - cron: "*/10 * * * *"   # every ~10 min (GitHub may delay runs by a few minutes)
+    - cron: "*/10 * * * *"
   workflow_dispatch:
+
+permissions:
+  contents: read
+
 concurrency:
   group: jobbot
   cancel-in-progress: false
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -17,14 +23,15 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements-actions.txt
-      - run: pip install -r requirements-actions.txt
-      # remembers which jobs were already sent (the "database")
-      - uses: actions/cache@v4
+      - run: python -m pip install -r requirements-actions.txt
+      - name: Restore job database
+        uses: actions/cache/restore@v4
         with:
           path: jobbot.db
-          key: jobdb-${{ github.run_id }}
+          key: jobdb-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: jobdb-
-      - run: python run_once.py
+      - name: Check jobs and send Telegram alerts
+        run: python run_once.py
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           OWNER_ID: ${{ secrets.OWNER_ID }}
@@ -33,3 +40,9 @@ jobs:
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
           STRICT: "1"
+      - name: Save job database
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: jobbot.db
+          key: jobdb-${{ github.run_id }}-${{ github.run_attempt }}

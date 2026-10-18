@@ -16,10 +16,13 @@ def send(text):
         r = requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", timeout=20,
                           data={"chat_id": CHAT, "text": text, "parse_mode": "HTML",
                                 "disable_web_page_preview": "true"})
-        if not r.ok:
-            print("telegram error", r.status_code)
+        r.raise_for_status()
+        if not r.json().get("ok"):
+            raise RuntimeError("Telegram rejected the message")
     if DISCORD:
-        requests.post(DISCORD, json={"content": re.sub(r"<[^>]+>", "", html.unescape(text))[:1900]}, timeout=20)
+        r = requests.post(DISCORD, json={
+            "content": re.sub(r"<[^>]+>", "", html.unescape(text))[:1900]}, timeout=20)
+        r.raise_for_status()
 
 
 def card(j):
@@ -29,6 +32,9 @@ def card(j):
 
 
 def main():
+    if not TOKEN or not CHAT:
+        raise RuntimeError("Set TELEGRAM_BOT_TOKEN and OWNER_ID in GitHub Actions secrets")
+
     core.kv_set("strict", os.getenv("STRICT", "1"))
     jobs = core.run_cycle()
     print(f"new matches: {len(jobs)}")  # counts only: public-repo logs are public

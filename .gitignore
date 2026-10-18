@@ -1,7 +1,4 @@
 .env
-.env.*
-!.env.example
 .venv/
 __pycache__/
 jobbot.db
-jobbot.db-*

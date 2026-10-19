@@ -28,9 +28,10 @@ def main():
     if not TOKEN or not CHAT:
         raise RuntimeError("Set TELEGRAM_BOT_TOKEN and OWNER_ID in GitHub Actions secrets")
 
+    manual_run = os.getenv("GITHUB_EVENT_NAME") == "workflow_dispatch"
     core.kv_set("strict", os.getenv("STRICT", "1"))
     jobs = core.run_cycle()
-    print(f"new matches: {len(jobs)}")  # counts only: public-repo logs are public
+    print(f"new matches: {len(jobs)}")
     if len(jobs) > 8:
         for i in range(0, len(jobs), 8):
             send("🆕 New matches\n\n" + "\n".join(
@@ -39,6 +40,8 @@ def main():
     else:
         for j in jobs:
             send(card(j))
+    if manual_run:
+        send(f"✅ Job scan complete. {len(jobs)} new match(es).")
     # daily health report so broken company slugs don't fail silently
     last = core.kv_get("health_ts")
     if not last or datetime.now() - datetime.fromisoformat(last) > timedelta(hours=24):

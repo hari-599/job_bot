@@ -1,26 +1,100 @@
-"""Edit this file to add/remove companies. Wrong slugs are harmless: they show up as ERR in /status."""
 
-QUERIES = ["AI Engineer", "Machine Learning Engineer", "Data Scientist",
-           "AI Researcher", "Research Scientist", "Generative AI", "LLM", "NLP"]
+"""India-focused AI/ML job tracker.
+ATS slugs are candidates: validate them using /status.
+A valid slug does not guarantee India-based openings.
+"""
 
-# Workday searches are relevance-ranked, so we add "India" to bias towards Indian postings.
-WORKDAY_QUERIES = ["machine learning India", "artificial intelligence India",
-                   "data scientist India", "research scientist India"]
+QUERIES = [
+    "AI Engineer",
+    "Machine Learning Engineer",
+    "ML Engineer",
+    "Data Scientist",
+    "Applied Scientist",
+    "Research Scientist",
+    "AI Researcher",
+    "Research Engineer",
+    "AI ML Engineer",
+    "Generative AI Engineer",
+    "LLM Engineer",
+    "RAG Engineer",
+    "AI Agent Engineer",
+    "Agentic AI",
+    "NLP Engineer",
+    "Deep Learning Engineer",
+    "Computer Vision Engineer",
+    "MLOps Engineer",
+    "ML Platform Engineer",
+    "Applied AI Engineer",
+    "AI Application Developer",
+    "AI Software Engineer",
+    "AI Automation Engineer",
+    "Data Science",
+    "Decision Scientist",
+]
 
-# boards.greenhouse.io/<slug>
-GREENHOUSE = ["anthropic", "databricks", "stripe", "airbnb", "cloudflare", "datadog",
-              "elastic", "twilio", "mongodb", "coinbase"]
+WORKDAY_QUERIES = [
+    "machine learning India",
+    "artificial intelligence India",
+    "AI engineer India",
+    "data scientist India",
+    "research scientist India",
+    "generative AI India",
+    "LLM engineer India",
+    "agentic AI India",
+    "NLP India",
+    "computer vision India",
+    "MLOps India",
+    "applied scientist India",
+    "AI research India",
+]
 
-# jobs.lever.co/<slug>
-LEVER = ["cred", "meesho", "paytm", "palantir"]
+# Greenhouse: boards.greenhouse.io/<slug>
+GREENHOUSE = [
+    # Existing
+    "anthropic", "databricks", "stripe", "airbnb",
+    "cloudflare", "datadog", "elastic", "twilio",
+    "mongodb", "coinbase",
 
-# jobs.ashbyhq.com/<slug>
-ASHBY = ["openai", "cohere", "perplexity"]
+    # AI, ML, LLM infrastructure
+    "scaleai", "togetherai",
 
-# jobs.smartrecruiters.com/<CompanyId>
-SMARTRECRUITERS = ["Visa"]
+    # SaaS and developer platforms
+    "figma", "reddit", "pinterest", "instacart",
+    "duolingo", "brex", "ramp", "samsara", "gitlab",
 
-# (display name, tenant, wd number, site) from <tenant>.wd<N>.myworkdayjobs.com/<site>
+    # Additional global tech employers
+    "webflow", "launchdarkly", "cockroachlabs",
+]
+
+# Lever: jobs.lever.co/<slug>
+LEVER = [
+    # Existing
+    "cred", "meesho", "paytm", "palantir",
+
+    # Candidate India product / SaaS companies
+    "freshworks", "zeta",
+]
+
+# Ashby: jobs.ashbyhq.com/<slug>
+ASHBY = [
+    # Existing
+    "openai", "cohere", "perplexity",
+
+    # AI-native / AI infrastructure candidates
+    "cursor", "vapi", "langchain", "pinecone", "anyscale",
+    "fireworks", "baseten", "writer", "lovable", "modal",
+
+    # Software and data platforms
+    "ramp", "linear", "posthog",
+]
+
+# SmartRecruiters: jobs.smartrecruiters.com/<CompanyId>
+SMARTRECRUITERS = [
+    "Visa",
+]
+
+# Only add entries here after verifying the exact Workday URL.
+# (display name, tenant, wd number, site)
 WORKDAY = [
     ("NVIDIA", "nvidia", 5, "NVIDIAExternalCareerSite"),
     ("Adobe", "adobe", 5, "external_experienced"),
@@ -30,4 +104,4 @@ WORKDAY = [
     ("Workday", "workday", 5, "Workday"),
 ]
 
-AMAZON = True  # amazon.jobs public JSON search
+AMAZON = True

@@ -18,7 +18,7 @@ MAX_AGE_DAYS = 3
 
 TITLE_INCLUDE = re.compile(
     r"\b(ai|a\.i\.|ml|machine learning|data scien\w*|research(er)?|nlp|llm|gen ?ai|"
-    r"generative|deep learning|computer vision|applied scientist|mlops|agent\w*)\b", re.I)
+    r"generative|deep learning|computer vision|applied scientist|decision scientist|mlops|agent\w*)\b", re.I)
 TITLE_EXCLUDE = re.compile(
     r"\b(senior|sr\.?|lead|principal|staff|head|director|manager|vp|architect|"
     r"intern(ship)?|sales|marketing|recruiter|"
@@ -223,7 +223,7 @@ def workday(name, tenant, n, site):
 
 def amazon():
     out = []
-    for q in C.QUERIES[:4]:
+    for q in C.QUERIES:
         d = http("GET", "https://www.amazon.jobs/en/search.json",
                  params={"base_query": q, "loc_query": "India", "country": "IND",
                          "sort": "recent", "result_limit": 50})

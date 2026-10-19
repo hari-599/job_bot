@@ -1,5 +1,5 @@
 """Core engine: fetch jobs -> strict experience/location/title match -> dedupe -> return new matches."""
-import hashlib, html, os, re, sqlite3, threading
+import hashlib, html, os, re, sqlite3, threading, time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 
@@ -113,9 +113,18 @@ def stats():
 # ------------------------------------------------------------------ HELPERS
 def http(method, url, **kw):
     try:
-        r = requests.request(method, url, headers=UA, timeout=25, **kw)
-        r.raise_for_status()
-        return r.json()
+        for attempt in range(3):
+            r = requests.request(method, url, headers=UA, timeout=25, **kw)
+            if r.status_code == 429 and attempt < 2:
+                retry_after = r.headers.get("Retry-After")
+                try:
+                    delay = float(retry_after) if retry_after else 2 ** attempt
+                except ValueError:
+                    delay = 2 ** attempt
+                time.sleep(min(max(delay, 1), 30))
+                continue
+            r.raise_for_status()
+            return r.json()
     except Exception as e:
         raise RuntimeError(f"{e.__class__.__name__} {getattr(getattr(e, 'response', None), 'status_code', '')}")
 

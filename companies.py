@@ -9,10 +9,10 @@ WORKDAY_QUERIES = ["machine learning India", "artificial intelligence India",
 
 # boards.greenhouse.io/<slug>
 GREENHOUSE = ["anthropic", "databricks", "stripe", "airbnb", "cloudflare", "datadog",
-              "postman", "elastic", "twilio", "mongodb", "coinbase", "nutanix"]
+              "elastic", "twilio", "mongodb", "coinbase"]
 
 # jobs.lever.co/<slug>
-LEVER = ["cred", "meesho", "paytm", "swiggy", "palantir"]
+LEVER = ["cred", "meesho", "paytm", "palantir"]
 
 # jobs.ashbyhq.com/<slug>
 ASHBY = ["openai", "cohere", "perplexity"]
@@ -26,11 +26,8 @@ WORKDAY = [
     ("Adobe", "adobe", 5, "external_experienced"),
     ("Salesforce", "salesforce", 12, "External_Career_Site"),
     ("Intel", "intel", 1, "External"),
-    ("Dell", "dell", 1, "External"),
     ("Mastercard", "mastercard", 1, "CorporateCareers"),
     ("Workday", "workday", 5, "Workday"),
-    ("Walmart", "walmart", 5, "WalmartExternal"),
-    ("Qualcomm", "qualcomm", 5, "External"),
 ]
 
 AMAZON = True  # amazon.jobs public JSON search
